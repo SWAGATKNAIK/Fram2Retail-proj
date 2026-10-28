@@ -17,9 +17,9 @@ function Login() {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
+ function validateEmail(email) {
+  return /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email);
+}
 
   function validateForm() {
     const newErrors = {};
@@ -30,9 +30,12 @@ function Login() {
     }
     if (!password) {
       newErrors.password = 'Password is required';
-    } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
+   } else if (
+      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(password)
+    ) {
+  newErrors.password =
+    'Password must contain 8+ characters, uppercase, lowercase, number and special character';
+  }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }

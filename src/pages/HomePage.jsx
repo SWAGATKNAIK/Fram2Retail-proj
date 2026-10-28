@@ -60,12 +60,18 @@ function HomePage() {
             <Sprout className="w-7 h-7 text-green-primary" />
             <span className="text-xl font-bold text-green-dark">Farm2Retail</span>
           </div>
+          <div className='flex gap-3'>
           <button
             onClick={handleLoginClick}
-            className="bg-green-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-dark transition-colors"
-          >
+            className="bg-green-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-dark transition-colors">
             Sign in
           </button>
+          <button
+            onClick={handleLoginClick}
+            className="bg-green-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-dark transition-colors">
+            Login
+          </button>
+          </div>
         </div>
       </nav>
 
