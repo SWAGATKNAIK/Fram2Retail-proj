@@ -14,9 +14,10 @@ import {
 
 function HarvestDetails() {
   const { id } = useParams();
-  const { harvests, setHarvests, setBookings } = useOutletContext();
+  const { harvests, setHarvests, setBookings, demoIdentities } = useOutletContext();
   const [quantity, setQuantity] = useState(10);
   const [booked, setBooked] = useState(false);
+  const [booking, setBooking] = useState(false);
 
   // Find the harvest by ID
   const harvest = harvests.find((h) => h.id === Number(id));
@@ -52,11 +53,13 @@ function HarvestDetails() {
 
   // Simulate booking
   function handleBooking() {
-    const booking = {
+    setBooking(true);
+    const bookingEntry = {
       id: Date.now(),
       harvestId: harvest.id,
       crop: harvest.crop,
       farmer: harvest.farmer,
+      retailer: demoIdentities.retailer,
       quantity: quantity,
       unit: harvest.unit,
       pricePerKg: harvest.pricePerKg,
@@ -66,7 +69,7 @@ function HarvestDetails() {
       status: 'Confirmed',
       bookedAt: new Date().toISOString().split('T')[0],
     };
-    setBookings((prev) => [booking, ...prev]);
+    setBookings((prev) => [bookingEntry, ...prev]);
     
     // Decrease the available quantity in the harvest
     setHarvests((prev) =>
@@ -76,6 +79,7 @@ function HarvestDetails() {
     );
     
     setBooked(true);
+    setBooking(false);
   }
 
   return (
@@ -226,9 +230,10 @@ function HarvestDetails() {
 
                 <button
                   onClick={handleBooking}
-                  className="w-full bg-green-primary text-white py-2.5 rounded-lg text-sm font-medium hover:bg-green-dark transition-colors"
+                  disabled={booking}
+                  className={`w-full py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${booking ? 'bg-gray-400 text-gray-200' : 'bg-green-primary text-white hover:bg-green-dark'}`}
                 >
-                  Confirm Booking
+                  {booking ? 'Processing...' : 'Confirm Booking'}
                 </button>
                 <p className="text-xs text-gray-400 text-center mt-2">
                   Demo only — no real payment is processed.

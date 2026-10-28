@@ -35,14 +35,16 @@ const roleData = {
 };
 
 function DashboardHome() {
-  const { currentRole } = useOutletContext();
+  const { currentRole, displayName } = useOutletContext();
   const data = roleData[currentRole] || roleData.farmer;
 
   return (
     <div>
       {/* Welcome Section */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-green-dark">{data.welcome}</h1>
+        <h1 className="text-2xl font-bold text-green-dark">
+          {displayName ? `Welcome, ${displayName}` : data.welcome}
+        </h1>
         <p className="mt-1 text-gray-600">{data.subtitle}</p>
       </div>
 

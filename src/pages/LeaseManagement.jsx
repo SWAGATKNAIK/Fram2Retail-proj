@@ -1,24 +1,36 @@
 import { useOutletContext } from 'react-router-dom';
-import { MapPin, DollarSign, Calendar, User, Home, Clock, FileText, Trash2, Eye } from 'lucide-react';
+import { MapPin, DollarSign, Calendar, User, Home, Clock, FileText, Trash2 } from 'lucide-react';
 
 function LeaseManagement() {
-  const { currentRole, leases, properties } = useOutletContext();
+  const { currentRole, leases, setLeases, properties, setProperties, demoIdentities } = useOutletContext();
+
+  // Determine the current user's landowner identity
+  const currentLandownerIdentity = demoIdentities.landowner;
 
   // Filter leases based on role
   let myLeases = leases;
   if (currentRole === 'farmer') {
     myLeases = leases.filter((l) => l.farmer === 'You (Demo Farmer)');
   } else if (currentRole === 'landowner') {
-    myLeases = leases.filter((l) => l.landowner === 'You (Demo Landowner)');
+    myLeases = leases.filter((l) => l.landowner === currentLandownerIdentity);
   }
 
   // End lease early
-  function endLease() {
+  function endLease(leaseId) {
     if (!window.confirm('End this lease early? This will make the property available again.')) return;
-    
-    // Note: We can't update leases state directly here since we don't have setLeases
-    // In a real app, we'd have setLeases in context. For demo, we'll just alert.
-    alert('Lease ended. Property is now available for new applications.');
+
+    const lease = leases.find((l) => l.id === leaseId);
+    if (!lease) return;
+
+    // Mark lease as Ended
+    setLeases((prev) =>
+      prev.map((l) => (l.id === leaseId ? { ...l, status: 'Ended' } : l))
+    );
+
+    // Make the property available again
+    setProperties((prev) =>
+      prev.map((p) => (p.id === lease.propertyId ? { ...p, status: 'Available' } : p))
+    );
   }
 
   if (myLeases.length === 0) {
@@ -128,12 +140,6 @@ function LeaseManagement() {
                       <button onClick={() => endLease(lease.id)} className="flex-1 sm:flex-none px-4 py-2 border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors">
                         <Trash2 className="w-4 h-4 inline mr-2" />
                         End Lease Early
-                      </button>
-                    )}
-                    {isActive && currentRole === 'farmer' && (
-                      <button className="flex-1 sm:flex-none px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                        <Eye className="w-4 h-4 inline mr-2" />
-                        View Details
                       </button>
                     )}
                     {!isActive && (

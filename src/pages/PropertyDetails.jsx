@@ -13,6 +13,7 @@ function PropertyDetails() {
   });
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [applied, setApplied] = useState(false);
   const [applyError, setApplyError] = useState('');
 
@@ -57,18 +58,27 @@ function PropertyDetails() {
 
   function handleSubmit(e) {
     e.preventDefault();
+    // Prevent duplicate submissions
+    if (isSubmitting) return;
+    // Clear stale errors on new attempt
+    setErrors({});
+    setApplyError('');
     setSubmitted(true);
     if (!validateForm()) return;
+
+    setIsSubmitting(true);
 
     // Check for existing pending application
     if (existingApplication) {
       setApplyError('You already have a pending application for this property.');
+      setIsSubmitting(false);
       return;
     }
 
     // Check if property is still available
     if (property.status !== 'Available') {
       setApplyError('This property is no longer available for lease.');
+      setIsSubmitting(false);
       return;
     }
 
@@ -87,6 +97,7 @@ function PropertyDetails() {
     setLeaseApplications((prev) => [newApplication, ...prev]);
     setApplied(true);
     setShowApplyForm(false);
+    setIsSubmitting(false);
   }
 
   function getInputClass(name) {

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Sprout, ShoppingCart, Landmark, ArrowRight, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import { findAccountByEmail, verifyAccount, startSession } from '../utils/auth';
 
 const roleOptions = [
   { value: 'farmer', label: 'Farmer', description: 'List harvests, manage bookings, bid on crops, find farmland, check soil data', icon: Sprout },
@@ -17,15 +18,23 @@ function Login() {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
- function validateEmail(email) {
-  return /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email);
-}
+  // If a demo role is already stored, go straight to the dashboard.
+  useEffect(() => {
+    if (sessionStorage.getItem('demoRole')) {
+      navigate('/dashboard');
+    }
+  }, [navigate]);
+
+  function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
 
   function validateForm() {
     const newErrors = {};
-    if (!email.trim()) {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
       newErrors.email = 'Email is required';
-    } else if (!validateEmail(email)) {
+    } else if (!validateEmail(trimmedEmail)) {
       newErrors.email = 'Please enter a valid email address';
     }
     if (!password) {
@@ -40,16 +49,38 @@ function Login() {
     return Object.keys(newErrors).length === 0;
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
+    // Prevent duplicate submissions
+    if (isSubmitting) return;
+    // Clear stale errors on new attempt
+    setErrors({});
     if (!validateForm()) return;
     setIsSubmitting(true);
 
-    // Simulate sign-in delay
-    setTimeout(() => {
-      sessionStorage.setItem('demoRole', selectedRole);
-      navigate('/dashboard');
-    }, 500);
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Check if this email belongs to a registered account
+    const registeredAccount = findAccountByEmail(normalizedEmail);
+
+    if (!registeredAccount) {
+      setErrors({ email: 'No account found with this email' });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Verify credentials against the stored hash
+    const result = await verifyAccount(normalizedEmail, password);
+
+    if (!result.success) {
+      setErrors({ password: result.error });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Establish session with the registered account's role and name
+    startSession(result.account);
+    navigate('/dashboard');
   }
 
   function getInputClass(name) {
@@ -102,7 +133,7 @@ function Login() {
             </div>
             {errors.email && (
               <div id="email-error" className="mt-1.5 flex items-center gap-1.5 text-sm text-red-600" role="alert">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{errors.email}</span>
               </div>
             )}
@@ -143,7 +174,7 @@ function Login() {
             </div>
             {errors.password && (
               <div id="password-error" className="mt-1.5 flex items-center gap-1.5 text-sm text-red-600" role="alert">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{errors.password}</span>
               </div>
             )}
@@ -221,6 +252,17 @@ function Login() {
             )}
           </button>
 
+          {/* Link to Sign Up */}
+          <div className="text-center text-sm text-gray-600">
+            Don&apos;t have an account?{' '}
+            <Link
+              to="/signup"
+              className="font-semibold text-green-primary hover:text-green-dark no-underline"
+            >
+              Sign up
+            </Link>
+          </div>
+
           {/* Back to Homepage */}
           <div className="text-center">
             <Link
@@ -232,11 +274,6 @@ function Login() {
             </Link>
           </div>
         </form>
-
-        {/* Demo Notice - subtle */}
-        <p className="mt-6 text-center text-xs text-gray-500">
-          Demo mode — any credentials work. Role selection determines dashboard view.
-        </p>
       </div>
     </div>
   );

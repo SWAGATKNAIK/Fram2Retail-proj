@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { IndianRupee, Wheat, User, Package } from 'lucide-react';
 
 function RetailerBookings() {
-  const { setHarvests, bookings, setBookings } = useOutletContext();
+  const { setHarvests, bookings, setBookings, demoIdentities } = useOutletContext();
   const [cancelConfirmId, setCancelConfirmId] = useState(null);
 
   if (bookings.length === 0) {
@@ -102,7 +102,7 @@ function RetailerBookings() {
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-600">{booking.farmer}</span>
+                      <span className="text-sm text-gray-600">{booking.farmer || demoIdentities.farmer}</span>
                     </div>
                   </td>
                   <td className="px-4 py-4">

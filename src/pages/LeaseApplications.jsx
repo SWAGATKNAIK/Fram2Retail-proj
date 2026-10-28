@@ -2,14 +2,20 @@ import { useOutletContext } from 'react-router-dom';
 import { DollarSign, Calendar, User, Home, FileText } from 'lucide-react';
 
 function LeaseApplications() {
-  const { currentRole, leaseApplications, setLeaseApplications, properties, leases, setLeases } = useOutletContext();
+  const { currentRole, leaseApplications, setLeaseApplications, properties, leases, setLeases, setProperties, demoIdentities } = useOutletContext();
+
+  // Determine the current user's landowner identity
+  // For demo: 'You (Demo Landowner)' when in landowner role
+  // For registered users: use demoName from sessionStorage (passed via context)
+  const currentLandownerIdentity = demoIdentities.landowner;
 
   // Filter applications based on role
   let myApplications = leaseApplications;
   if (currentRole === 'farmer') {
     myApplications = leaseApplications.filter((a) => a.farmer === 'You (Demo Farmer)');
   } else if (currentRole === 'landowner') {
-    myApplications = leaseApplications.filter((a) => a.landowner === 'You (Demo Landowner)');
+    // Match applications where the landowner field matches the current user's identity
+    myApplications = leaseApplications.filter((a) => a.landowner === currentLandownerIdentity);
   }
 
   // Handle approve/reject
@@ -29,25 +35,30 @@ function LeaseApplications() {
       (a) => a.propertyId === app.propertyId && a.id !== appId && a.status === 'Pending'
     );
 
+    // Compute dates once
+    const now = new Date();
+    const startDate = now.toISOString().split('T')[0];
+    const endDate = new Date(now.getTime() + app.leaseDuration * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
     // Approve this application
     setLeaseApplications((prev) =>
       prev.map((a) =>
         a.id === appId
-          ? { ...a, status: 'Approved', approvedAt: new Date().toISOString().split('T')[0] }
+          ? { ...a, status: 'Approved', approvedAt: startDate }
           : otherPending.some((oa) => oa.id === a.id)
-          ? { ...a, status: 'Rejected', rejectedAt: new Date().toISOString().split('T')[0], rejectedReason: 'Another application was approved for this property' }
+          ? { ...a, status: 'Rejected', rejectedAt: startDate, rejectedReason: 'Another application was approved for this property' }
           : a
       )
     );
 
-    // Update property status
-    // We need to update properties via setProperties, but we don't have it here
-    // The property status will be updated when the landowner views MyProperties
+    // Update property status to Leased
+    setProperties((prev) =>
+      prev.map((p) => (p.id === app.propertyId ? { ...p, status: 'Leased' } : p))
+    );
 
     // Create lease record
     const property = properties.find((p) => p.id === app.propertyId);
     if (property) {
-      if (property) {
       // Use deterministic ID based on application ID
       const newLease = {
         id: app.id * 10000 + 1,
@@ -58,13 +69,12 @@ function LeaseApplications() {
         landowner: app.landowner,
         agreedRent: app.proposedRent,
         leaseDuration: app.leaseDuration,
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date().toISOString().split('T')[0],
+        startDate,
+        endDate,
         status: 'Active',
-        createdAt: new Date().toISOString().split('T')[0],
+        createdAt: startDate,
       };
       setLeases((prev) => [newLease, ...prev]);
-    }
     }
   }
 

@@ -19,6 +19,7 @@ import LeaseApplications from './pages/LeaseApplications';
 import LeaseManagement from './pages/LeaseManagement';
 import SoilIntelligence from './pages/SoilIntelligence';
 import Login from './pages/Login';
+import SignUp from './pages/SignUp';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
         <Route path="/dashboard" element={<DashboardLayout />}>
           {/* Default dashboard view */}
           <Route index element={<DashboardHome />} />

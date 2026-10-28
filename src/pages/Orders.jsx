@@ -2,14 +2,14 @@ import { useOutletContext } from 'react-router-dom';
 import { Wheat, MapPin, Calendar, IndianRupee, User, Package, CheckCircle } from 'lucide-react';
 
 function Orders() {
-  const { currentRole, orders, setOrders } = useOutletContext();
+  const { currentRole, orders, setOrders, demoIdentities } = useOutletContext();
 
   // Filter orders relevant to current role
   let myOrders = orders;
   if (currentRole === 'farmer') {
-    myOrders = orders.filter((o) => o.farmer === 'You (Demo Farmer)');
+    myOrders = orders.filter((o) => o.farmer === demoIdentities.farmer);
   } else if (currentRole === 'retailer') {
-    myOrders = orders.filter((o) => o.retailer === 'You (Demo Retailer)');
+    myOrders = orders.filter((o) => o.retailer === demoIdentities.retailer);
   }
 
   const stages = ['Farmer Selected', 'Growing', 'Ready for Harvest', 'Delivered'];
@@ -158,9 +158,6 @@ function Orders() {
                 {order.status === 'Delivered' && (
                   <span className="flex-1 sm:flex-none px-6 py-3 bg-gray-100 text-gray-500 rounded-lg text-center text-sm font-medium">Order Completed</span>
                 )}
-                <button className="flex-1 sm:flex-none px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                  View Details
-                </button>
               </div>
             </div>
           </div>

@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { useParams, useOutletContext, Link } from 'react-router-dom';
 import { ArrowLeft, Wheat, IndianRupee, User, CheckCircle, Gavel } from 'lucide-react';
 
 function ManageBids() {
   const { id } = useParams();
   const { requirements, setRequirements, bids, setBids, orders, setOrders } = useOutletContext();
+
+  const [processing, setProcessing] = useState(false);
 
   const requirement = requirements.find((r) => r.id === Number(id));
 
@@ -26,17 +29,24 @@ function ManageBids() {
   const stages = ['Farmer Selected', 'Growing', 'Ready for Harvest', 'Delivered'];
 
   function handleActionClick(type, bidId) {
+    if (processing) return;
+
+    const bid = requirementBids.find((b) => b.id === bidId);
+
+    // Guard: cannot accept/reject an already-finalized bid
+    if (type === 'accept' && bid?.status === 'Accepted') return;
+    if (type === 'reject' && bid?.status !== 'Pending') return;
+
+    // Guard: only one bid can be accepted per requirement
     if (type === 'accept' && acceptedBid && acceptedBid.id !== bidId) {
       alert('A bid has already been accepted for this requirement. Only one bid can be accepted.');
       return;
     }
-    // For accept, check if already accepted another bid
+
+    setProcessing(true);
+
     if (type === 'accept') {
-      if (acceptedBid && acceptedBid.id !== bidId) {
-        alert('A bid has already been accepted for this requirement. Only one bid can be accepted.');
-        return;
-      }
-      // Accept the bid
+      // Accept the bid and reject all other pending bids
       setBids((prev) =>
         prev.map((b) =>
           b.id === bidId ? { ...b, status: 'Accepted' } : b.status === 'Pending' ? { ...b, status: 'Rejected' } : b
@@ -47,19 +57,19 @@ function ManageBids() {
         prev.map((r) => (r.id === requirement.id ? { ...r, status: 'Awarded' } : r))
       );
       // Create order
-      const bid = requirementBids.find((b) => b.id === bidId);
+      const acceptedBidObj = requirementBids.find((b) => b.id === bidId);
       const newOrder = {
         id: requirement.id * 10000 + bidId,
         requirementId: requirement.id,
         bidId: bidId,
         crop: requirement.crop,
         category: requirement.category,
-        farmer: bid?.farmer || 'Unknown Farmer',
+        farmer: acceptedBidObj?.farmer || 'Unknown Farmer',
         retailer: requirement.retailer,
-        agreedPrice: bid?.proposedPrice || 0,
-        quantity: bid?.expectedQuantity || 0,
+        agreedPrice: acceptedBidObj?.proposedPrice || 0,
+        quantity: acceptedBidObj?.expectedQuantity || 0,
         unit: requirement.unit,
-        estimatedHarvestDate: bid?.estimatedHarvestDate || '',
+        estimatedHarvestDate: acceptedBidObj?.estimatedHarvestDate || '',
         qualitySpecs: requirement.qualitySpecs,
         location: requirement.location,
         status: 'Farmer Selected',
@@ -73,6 +83,8 @@ function ManageBids() {
         prev.map((b) => (b.id === bidId ? { ...b, status: 'Rejected' } : b))
       );
     }
+
+    setProcessing(false);
   }
 
   // Advance order status
@@ -192,8 +204,20 @@ function ManageBids() {
                         <span className="text-sm text-red-600 font-medium">Rejected</span>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <button onClick={() => handleActionClick('accept', bid.id)} className="px-3 py-1.5 text-xs bg-green-primary text-white rounded hover:bg-green-dark transition-colors font-medium">Accept</button>
-                          <button onClick={() => handleActionClick('reject', bid.id)} className="px-3 py-1.5 text-xs bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors font-medium">Reject</button>
+                          <button
+                            onClick={() => handleActionClick('accept', bid.id)}
+                            disabled={processing}
+                            className={`px-3 py-1.5 text-xs rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${processing ? 'bg-gray-400 text-gray-200' : 'bg-green-primary text-white hover:bg-green-dark'}`}
+                          >
+                            {processing ? 'Processing...' : 'Accept'}
+                          </button>
+                          <button
+                            onClick={() => handleActionClick('reject', bid.id)}
+                            disabled={processing}
+                            className={`px-3 py-1.5 text-xs rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${processing ? 'bg-gray-400 text-gray-200' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}
+                          >
+                            {processing ? 'Processing...' : 'Reject'}
+                          </button>
                         </div>
                       )}
                     </td>

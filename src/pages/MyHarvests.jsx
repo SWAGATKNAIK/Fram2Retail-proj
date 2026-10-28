@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Plus, X, Wheat, MapPin, Calendar, IndianRupee, AlertCircle, Package, Trash2, Upload } from 'lucide-react';
+import { Plus, X, Wheat, MapPin, Calendar, IndianRupee, AlertCircle, Package, Trash2, Upload, Edit } from 'lucide-react';
 import { cropCategories, generateId } from '../data/harvests';
 
 function MyHarvests() {
-  const { harvests, setHarvests, bookings } = useOutletContext();
+  const { harvests, setHarvests, bookings, demoIdentities } = useOutletContext();
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     crop: '',
     category: 'Vegetables',
@@ -18,9 +19,13 @@ function MyHarvests() {
   });
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageError, setImageError] = useState('');
   const [imagePreview, setImagePreview] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+
+  // Filter harvests to only show those owned by the current demo farmer
+  const myHarvests = harvests.filter((h) => h.farmer === demoIdentities.farmer);
 
   // Handle form field changes
   function handleChange(e) {
@@ -91,41 +96,46 @@ function MyHarvests() {
     return Object.keys(newErrors).length === 0;
   }
 
-  // Add a new harvest listing
+  // Add a new harvest listing or edit existing
   function handleSubmit(e) {
     e.preventDefault();
+    // Prevent duplicate submissions
+    if (isSubmitting) return;
+    // Clear stale errors on new attempt
+    setErrors({});
     setSubmitted(true);
     if (!validateForm()) return;
 
-    const newHarvest = {
-      id: generateId(),
-      crop: formData.crop,
-      category: formData.category,
-      image: formData.image, // Store base64 data URL or empty string
-      quantity: Number(formData.quantity),
-      unit: 'kg',
-      pricePerKg: Number(formData.pricePerKg),
-      location: formData.location,
-      harvestDate: formData.harvestDate,
-      farmer: 'You (Demo Farmer)',
-      description: formData.description,
-    };
-    setHarvests((prev) => [newHarvest, ...prev]);
-    setFormData({
-      crop: '',
-      category: 'Vegetables',
-      quantity: '',
-      pricePerKg: '',
-      location: '',
-      harvestDate: '',
-      description: '',
-      image: '',
-    });
-    setImagePreview('');
-    setImageError('');
-    setErrors({});
-    setSubmitted(false);
-    setShowForm(false);
+    setIsSubmitting(true);
+
+    if (editingId) {
+      // Update existing harvest
+      setHarvests((prev) =>
+        prev.map((h) =>
+          h.id === editingId
+            ? { ...h, ...formData, quantity: Number(formData.quantity), pricePerKg: Number(formData.pricePerKg), image: formData.image }
+            : h
+        )
+      );
+    } else {
+      // Create new harvest listing
+      const newHarvest = {
+        id: generateId(),
+        crop: formData.crop,
+        category: formData.category,
+        image: formData.image, // Store base64 data URL or empty string
+        quantity: Number(formData.quantity),
+        unit: 'kg',
+        pricePerKg: Number(formData.pricePerKg),
+        location: formData.location,
+        harvestDate: formData.harvestDate,
+        farmer: 'You (Demo Farmer)',
+        description: formData.description,
+      };
+      setHarvests((prev) => [newHarvest, ...prev]);
+    }
+    setIsSubmitting(false);
+    resetForm();
   }
 
   // Check if harvest has active bookings (not cancelled)
@@ -149,6 +159,43 @@ function MyHarvests() {
 
   function cancelDelete() {
     setDeleteConfirmId(null);
+  }
+
+  function resetForm() {
+    setFormData({
+      crop: '',
+      category: 'Vegetables',
+      quantity: '',
+      pricePerKg: '',
+      location: '',
+      harvestDate: '',
+      description: '',
+      image: '',
+    });
+    setImagePreview('');
+    setImageError('');
+    setErrors({});
+    setSubmitted(false);
+    setIsSubmitting(false);
+    setShowForm(false);
+    setEditingId(null);
+  }
+
+  // Start editing a harvest
+  function startEdit(harvest) {
+    setFormData({
+      crop: harvest.crop,
+      category: harvest.category,
+      quantity: harvest.quantity,
+      pricePerKg: harvest.pricePerKg,
+      location: harvest.location,
+      harvestDate: harvest.harvestDate,
+      description: harvest.description,
+      image: harvest.image || '',
+    });
+    setImagePreview(harvest.image || '');
+    setEditingId(harvest.id);
+    setShowForm(true);
   }
 
   function getInputClass(name) {
@@ -188,8 +235,9 @@ function MyHarvests() {
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-xl border border-gray-200 p-4">
-          <h2 className="text-lg font-semibold text-green-dark mb-4">New Harvest Listing</h2>
+          className="bg-white rounded-xl border border-gray-200 p-6 mb-6"
+        >
+          <h2 className="text-lg font-semibold text-green-dark mb-4">{editingId ? 'Edit Harvest Listing' : 'New Harvest Listing'}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Crop Name *</label>
@@ -381,15 +429,15 @@ function MyHarvests() {
         </form>
       )}
 
-      {/* Harvest listings grid */}
-      {harvests.length === 0 ? (
+{/* Harvest listings grid */}
+      {myHarvests.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
           <Wheat className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">No harvest listings yet. Click &quot;Add Harvest&quot; to create your first listing.</p>
+          <p className="text-gray-500">No harvest listings yet. Click "Add Harvest" to create your first listing.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-{harvests.map((harvest) => {
+{myHarvests.map((harvest) => {
               // Calculate bookings for this harvest
               const harvestBookings = bookings.filter((b) => b.harvestId === harvest.id);
               const totalBookedQty = harvestBookings.reduce((sum, b) => sum + b.quantity, 0);
@@ -416,8 +464,15 @@ function MyHarvests() {
                         {harvestBookings.length} booking{harvestBookings.length > 1 ? 's' : ''}
                       </div>
                     )}
-                    {/* Delete button */}
-                    <div className="absolute top-2 left-2">
+                    {/* Edit & Delete buttons */}
+                    <div className="absolute top-2 left-2 flex flex-col gap-1">
+                      <button
+                        onClick={() => startEdit(harvest)}
+                        className="p-1.5 bg-white/90 backdrop-blur-sm rounded-lg text-gray-500 hover:text-green-primary hover:bg-green-50 transition-colors"
+                        aria-label="Edit harvest"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
                       {showDeleteConfirm ? (
                         <div className="flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-1.5 shadow-lg">
                           <span className="text-xs text-gray-700 px-2">Delete?</span>

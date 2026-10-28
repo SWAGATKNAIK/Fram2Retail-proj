@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#f8f5f0"/>
+  <!-- Potato tubers - brown/tan ovals, not sweet potatoes -->
+  <ellipse cx="118" cy="132" rx="40" ry="27" fill="#a87543"/>
+  <ellipse cx="130" cy="150" rx="34" ry="24" fill="#9c6b3c"/>
+  <ellipse cx="202" cy="162" rx="42" ry="29" fill="#a87543"/>
+  <ellipse cx="212" cy="148" rx="30" ry="22" fill="#9c6b3c"/>
+  <ellipse cx="288" cy="128" rx="38" ry="25" fill="#a87543"/>
+  <ellipse cx="298" cy="146" rx="32" ry="21" fill="#9c6b3c"/>
+  <ellipse cx="308" cy="192" rx="40" ry="27" fill="#a87543"/>
+  <ellipse cx="168" cy="212" rx="36" ry="25" fill="#9c6b3c"/>
+  <ellipse cx="230" cy="205" rx="33" ry="23" fill="#a87543"/>
+  <!-- Small surface texture dots -->
+  <circle cx="108" cy="128" r="2.5" fill="#9c6b3c" opacity="0.6"/>
+  <circle cx="126" cy="138" r="2.5" fill="#9c6b3c" opacity="0.6"/>
+  <circle cx="212" cy="168" r="2.5" fill="#9c6b3c" opacity="0.6"/>
+  <circle cx="282" cy="122" r="2.5" fill="#9c6b3c" opacity="0.6"/>
+  <circle cx="300" cy="186" r="2.5" fill="#9c6b3c" opacity="0.6"/>
+  <text x="200" y="272" text-anchor="middle" fill="#475569" font-size="13" font-family="system-ui, sans-serif">Potatoes</text>
+</svg>

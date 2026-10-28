@@ -4,7 +4,7 @@ import { Search, Wheat, MapPin, Calendar, IndianRupee, Gavel, Flag } from 'lucid
 import { cropCategories } from '../data/harvests';
 
 function CropBids() {
-  const { requirements, bids, setBids } = useOutletContext();
+  const { requirements, bids, setBids, demoIdentities } = useOutletContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showBidForm, setShowBidForm] = useState(false);
@@ -17,6 +17,7 @@ function CropBids() {
   });
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filter open requirements
   const openRequirements = requirements.filter((r) => r.status === 'Open');
@@ -30,7 +31,7 @@ function CropBids() {
   });
 
   // Get farmer's bids
-  const myBids = bids.filter((b) => b.farmer === 'You (Demo Farmer)');
+  const myBids = bids.filter((b) => b.farmer === demoIdentities.farmer);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -51,14 +52,20 @@ function CropBids() {
 
   function handleBidSubmit(e) {
     e.preventDefault();
+    // Prevent duplicate submissions
+    if (isSubmitting) return;
+    // Clear stale errors on new attempt
+    setErrors({});
     setSubmitted(true);
     if (!validateBidForm()) return;
+
+    setIsSubmitting(true);
 
     const newBid = {
       id: Date.now(),
       requirementId: biddingReq.id,
       crop: biddingReq.crop,
-      farmer: 'You (Demo Farmer)',
+      farmer: demoIdentities.farmer,
       proposedPrice: Number(formData.proposedPrice),
       expectedQuantity: Number(formData.expectedQuantity),
       unit: biddingReq.unit,
@@ -68,6 +75,7 @@ function CropBids() {
       createdAt: new Date().toISOString().split('T')[0],
     };
     setBids((prev) => [newBid, ...prev]);
+    setIsSubmitting(false);
     resetBidForm();
   }
 
@@ -274,7 +282,7 @@ function CropBids() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-4"><span className="text-sm text-gray-600">Demo Retailer</span></td>
+                      <td className="px-4 py-4"><span className="text-sm text-gray-600">{bid.retailer || demoIdentities.retailer}</span></td>
                       <td className="px-4 py-4"><div className="flex items-center gap-2 text-sm font-medium text-green-dark"><IndianRupee className="w-4 h-4" />₹{bid.proposedPrice}/{bid.unit}</div></td>
                       <td className="px-4 py-4"><div className="flex items-center gap-2 text-sm text-gray-600"><Wheat className="w-4 h-4" />{bid.expectedQuantity} {bid.unit}</div></td>
                       <td className="px-4 py-4 text-sm text-gray-600">{bid.estimatedHarvestDate}</td>

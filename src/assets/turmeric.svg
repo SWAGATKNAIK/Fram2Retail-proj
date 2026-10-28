@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#f8f5f0"/>
+  <!-- Turmeric rhizomes - orange/yellow segmented roots, not ginger -->
+  <path d="M98 142 Q110 136 132 142 Q152 148 162 138" stroke="#ea580c" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <path d="M132 142 Q150 152 166 146 Q186 142 196 152" stroke="#d97706" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <path d="M200 112 Q210 127 226 132 Q242 142 256 126" stroke="#ea580c" stroke-width="13" fill="none" stroke-linecap="round"/>
+  <path d="M256 126 Q272 136 286 130 Q302 122 316 132" stroke="#d97706" stroke-width="11" fill="none" stroke-linecap="round"/>
+  <path d="M138 188 Q154 202 170 198 Q186 192 200 202" stroke="#ea580c" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <path d="M200 202 Q212 190 226 198 Q240 192 254 200" stroke="#d97706" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <circle cx="98" cy="142" r="7" fill="#ea580c"/>
+  <circle cx="162" cy="138" r="6" fill="#d97706"/>
+  <circle cx="256" cy="126" r="7" fill="#ea580c"/>
+  <circle cx="316" cy="132" r="6" fill="#d97706"/>
+  <circle cx="200" cy="202" r="7" fill="#ea580c"/>
+  <circle cx="254" cy="200" r="6" fill="#d97706"/>
+  <text x="200" y="268" text-anchor="middle" fill="#475569" font-size="13" font-family="system-ui, sans-serif">Turmeric</text>
+</svg>

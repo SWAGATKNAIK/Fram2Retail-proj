@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Plus, MapPin, DollarSign, Home, Flag, Wheat, Droplet, Leaf, FileText } from 'lucide-react';
+import { Plus, MapPin, DollarSign, Home, Flag, Wheat, Droplet, Leaf, FileText, Upload, X } from 'lucide-react';
 
 const leaseTypes = ['Fixed Rent', 'Crop Share (50-50)', 'Crop Share (60-40)', 'Flexible'];
 const soilTypes = ['Black Cotton Soil', 'Alluvial Soil', 'Red Loam Soil', 'Laterite Soil', 'Sandy Loam', 'Clay Soil'];
@@ -23,9 +23,51 @@ function MyProperties() {
     waterAvailability: 'Good',
     permittedCrops: '',
     description: '',
+    images: [],
   });
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [imageError, setImageError] = useState('');
+
+  // Handle image upload (multiple images)
+  function handleImageChange(e) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    files.forEach((file) => {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        setImageError('Please select only JPG, PNG, or WebP images');
+        return;
+      }
+
+      // Validate file size (max 2MB)
+      const maxSize = 2 * 1024 * 1024; // 2MB
+      if (file.size > maxSize) {
+        setImageError('Each image must be less than 2MB');
+        return;
+      }
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target.result;
+        setImagePreviews((prev) => [...prev, dataUrl]);
+        setFormData((prev) => ({ ...prev, images: [...prev.images, dataUrl] }));
+        setImageError('');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Remove image
+  function removeImage(index) {
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+    setFormData((prev) => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
+    setImageError('');
+  }
 
   // Check if property has active lease
   function hasActiveLease(propertyId) {
@@ -101,7 +143,10 @@ function MyProperties() {
       waterAvailability: 'Good',
       permittedCrops: '',
       description: '',
+      images: [],
     });
+    setImagePreviews([]);
+    setImageError('');
     setErrors({});
     setSubmitted(false);
     setShowForm(false);
@@ -121,7 +166,9 @@ function MyProperties() {
       waterAvailability: prop.waterAvailability,
       permittedCrops: prop.permittedCrops,
       description: prop.description,
+      images: prop.images || [],
     });
+    setImagePreviews(prop.images || []);
     setEditingId(prop.id);
     setShowForm(true);
   }
@@ -229,12 +276,6 @@ function MyProperties() {
               </select>
               {errors.waterAvailability && <p className="mt-1 text-sm text-red-600 flex items-center gap-1"><Flag className="w-3.5 h-3.5" />{errors.waterAvailability}</p>}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Rent Period</label>
-              <select name="rentPeriod" value={formData.rentPeriod} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-primary/30 focus:border-green-primary">
-                {rentPeriods.map((p) => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
-              </select>
-            </div>
             <div className="lg:col-span-3">
               <label className="block text-sm font-medium text-gray-700 mb-1">Permitted Crops *</label>
               <input type="text" name="permittedCrops" value={formData.permittedCrops} onChange={handleChange} required placeholder="e.g. Grapes, Tomatoes, Onions, Pomegranate" className={getInputClass('permittedCrops')} />
@@ -245,12 +286,69 @@ function MyProperties() {
               <textarea name="description" value={formData.description} onChange={handleChange} required rows={4} placeholder="Describe the property: soil quality, water sources, access, nearby markets, certifications, etc." className={getTextareaClass('description')} />
               {errors.description && <p className="mt-1 text-sm text-red-600 flex items-center gap-1"><Flag className="w-3.5 h-3.5" />{errors.description}</p>}
             </div>
-          </div>
-          <div className="mt-4 flex justify-end gap-2">
+            {/* Image Upload */}
+            <div className="lg:col-span-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Property Images (Optional)</label>
+              <div className="space-y-2">
+                {/* Image Previews */}
+                {imagePreviews.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {imagePreviews.map((preview, index) => (
+                      <div key={index} className="relative w-28 h-28 bg-green-primary/5 rounded-lg overflow-hidden flex items-center justify-center border border-green-primary/20">
+                        <img src={preview} alt={`Property ${index + 1}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                          aria-label="Remove image"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* File Input */}
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleImageChange}
+                      className="sr-only"
+                      id="property-images"
+                      multiple
+                    />
+                    <span className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                      <Upload className="w-4 h-4" />
+                      {imagePreviews.length > 0 ? 'Add More Images' : 'Choose Images'}
+                    </span>
+                  </label>
+                  {imagePreviews.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => { setImagePreviews([]); setFormData((prev) => ({ ...prev, images: [] })); setImageError(''); }}
+                      className="text-sm text-red-600 hover:text-red-700 font-medium"
+                    >
+                      Remove All
+                    </button>
+                  )}
+                </div>
+                {imageError && (
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <Flag className="w-3.5 h-3.5" />
+                    {imageError}
+                  </p>
+                )}
+                <p className="text-xs text-gray-500">JPG, PNG, or WebP. Max 2MB each. Multiple files allowed.</p>
+              </div>
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
             <button type="button" onClick={resetForm} className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">Cancel</button>
             <button type="submit" className="bg-green-primary text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-dark transition-colors">
               {editingId ? 'Update Property' : 'Create Listing'}
             </button>
+          </div>
           </div>
         </form>
       )}

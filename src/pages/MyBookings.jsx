@@ -2,11 +2,11 @@ import { useOutletContext } from 'react-router-dom';
 import { IndianRupee, Wheat, User, Package } from 'lucide-react';
 
 function MyBookings() {
-  const { harvests, bookings } = useOutletContext();
+  const { harvests, bookings, demoIdentities } = useOutletContext();
 
   // Get bookings for harvests owned by the current farmer (demo farmer)
   const myHarvestIds = harvests
-    .filter((h) => h.farmer === 'You (Demo Farmer)')
+    .filter((h) => h.farmer === demoIdentities.farmer)
     .map((h) => h.id);
 
   const myBookings = bookings.filter((b) => myHarvestIds.includes(b.harvestId));
@@ -64,7 +64,7 @@ function MyBookings() {
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-600">Demo Retailer</span>
+                      <span className="text-sm text-gray-600">{booking.retailer || demoIdentities.retailer}</span>
                     </div>
                   </td>
                   <td className="px-4 py-4">
